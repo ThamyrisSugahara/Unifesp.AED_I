@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #define SIZE 9                                                  // Tamanho da matriz (Jogo Sudoku)
-#define MAX_GAMES 100                                           // Define limite de número de jogos
 
 // Verificar se atende as regras do Sudoku
 bool isCorrect(int matriz[SIZE][SIZE]){ 
@@ -50,33 +49,19 @@ bool isCorrect(int matriz[SIZE][SIZE]){
 
 int main() {
     int numGames, game;
-    int sudokus[MAX_GAMES][SIZE][SIZE];
+    int sudokus[SIZE][SIZE];
     
     scanf("%d", &numGames);
-
-    for (game = 0; game < numGames; game++) {                      // Leitura dos jogos de Sudoku
-        for (int i = 0; i < SIZE; i++) {
-            for (int j = 0; j < SIZE; j++) {
-                scanf("%d", &sudokus[game][i][j]);
+    for (int i = 0; i < numGames; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            for (int k = 0; k < SIZE; k++) {
+                scanf("%d", &sudokus[j][k]);
             }
         }
+
+        printf("Instancia %d\n", i + 1);
+        if (isCorrect(sudokus)) printf("SIM\n\n");
+        else printf("NAO\n\n");
     }
-
-    for (game = 0; game < numGames; game++) {                       // Verificação e impressão dos resultados
-        printf("Instancia %d\n", game + 1);
-
-        bool isCorrectResult = isCorrect(sudokus[game]);
-
-        if (isCorrectResult) {
-            printf("SIM\n");
-        } else {
-            printf("NAO\n");
-        }
-
-        if (game < numGames - 1) {
-            printf("\n"); 
-        }
-    }
-
     return 0;
 }
