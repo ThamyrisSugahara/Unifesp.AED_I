@@ -2,115 +2,135 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-// Define um tipo para representar o valor dos nós da árvore
 typedef int Valor;
 
-// Estrutura para representar um nó da árvore binária
 typedef struct No {
-    Valor valor;          // Valor armazenado no nó
-    struct No* esquerda;  // Ponteiro para o nó filho à esquerda
-    struct No* direita;   // Ponteiro para o nó filho à direita
+    Valor valor;
+    struct No* esquerda;
+    struct No* direita;
 } No;
 
-// Função para criar uma folha (nó vazio)
 No* criarFolha() {
-    return NULL;  // Uma folha é representada por um ponteiro nulo
+    return NULL;
 }
 
-// Função para criar um novo nó na árvore
 No* criarArvore(Valor v, No* esq, No* dir) {
-    No* novoNo = (No*)malloc(sizeof(No));  // Aloca memória para o novo nó
-    novoNo->valor = v;                     // Atribui o valor ao nó
-    novoNo->esquerda = esq;                // Define o filho à esquerda
-    novoNo->direita = dir;                 // Define o filho à direita
-    return novoNo;                         // Retorna o nó criado
+    No* novoNo = (No*)malloc(sizeof(No));
+    novoNo->valor = v;
+    novoNo->esquerda = esq;
+    novoNo->direita = dir;
+    return novoNo;
 }
 
-// Função para inserir um valor na árvore binária
+int altura(No* no) {
+    if (no == NULL) return -1;
+    int alturaEsq = altura(no->esquerda);
+    int alturaDir = altura(no->direita);
+    return (alturaEsq > alturaDir ? alturaEsq : alturaDir) + 1;
+}
+
 No* inserir(No* no, Valor v) {
-    if (no == NULL) {  // Se o nó atual é uma folha (nulo)
-        return criarArvore(v, criarFolha(), criarFolha());  // Cria um novo nó com o valor
+    if (no == NULL) {
+        return criarArvore(v, criarFolha(), criarFolha());
     }
-    if (v < no->valor) {  // Se o valor é menor que o valor do nó atual
-        no->esquerda = inserir(no->esquerda, v);  // Insere recursivamente na subárvore esquerda
-    } else {  // Se o valor é maior ou igual ao valor do nó atual
-        no->direita = inserir(no->direita, v);  // Insere recursivamente na subárvore direita
+    if (v < no->valor) {
+        no->esquerda = inserir(no->esquerda, v);
+    } else {
+        no->direita = inserir(no->direita, v);
     }
-    return no;  // Retorna o nó atualizado
+    return no;
 }
 
-// Estrutura para representar uma fila, usada para percorrer a árvore em largura
+bool pesquisar(No* no, Valor v) {
+    if (no == NULL) return false;
+    if (v == no->valor) return true;
+    if (v < no->valor) return pesquisar(no->esquerda, v);
+    return pesquisar(no->direita, v);
+}
+
+void infixa(No* no) {
+    if (no == NULL) return;
+    infixa(no->esquerda);
+    printf("%d ", no->valor);
+    infixa(no->direita);
+}
+
+void prefixa(No* no) {
+    if (no == NULL) return;
+    printf("%d ", no->valor);
+    prefixa(no->esquerda);
+    prefixa(no->direita);
+}
+
+void posfixa(No* no) {
+    if (no == NULL) return;
+    posfixa(no->esquerda);
+    posfixa(no->direita);
+    printf("%d ", no->valor);
+}
+
 typedef struct Fila {
-    No** elementos;   // Vetor de ponteiros para os nós da árvore
-    int inicio;       // Índice de onde começa a fila
-    int fim;          // Índice de onde termina a fila
-    int tamanho;      // Número de elementos na fila
-    int capacidade;   // Capacidade máxima da fila
+    No** elementos;
+    int tamanho;
+    int capacidade;
 } Fila;
 
-// Função para criar uma fila com uma dada capacidade
 Fila* criarFila(int capacidade) {
-    Fila* fila = (Fila*)malloc(sizeof(Fila));  // Aloca memória para a fila
-    fila->elementos = (No**)malloc(capacidade * sizeof(No*));  // Aloca memória para os elementos da fila
-    fila->inicio = fila->fim = fila->tamanho = 0;  // Inicializa os índices e tamanho
-    fila->capacidade = capacidade;  // Define a capacidade da fila
-    return fila;  // Retorna a fila criada
+    Fila* fila = (Fila*)malloc(sizeof(Fila));
+    fila->elementos = (No**)malloc(capacidade * sizeof(No*));
+    fila->tamanho = 0;
+    fila->capacidade = capacidade;
+    return fila;
 }
 
-// Função para verificar se a fila está vazia
 bool filaVazia(Fila* fila) {
-    return fila->tamanho == 0;  // A fila está vazia se o tamanho for 0
+    return fila->tamanho == 0;
 }
 
-// Função para inserir um nó na fila
 void inserirFila(Fila* fila, No* no) {
-    fila->elementos[fila->fim] = no;  // Insere o nó no final da fila
-    fila->fim = (fila->fim + 1) % fila->capacidade;  // Atualiza o índice de fim (com comportamento circular)
-    fila->tamanho++;  // Incrementa o tamanho da fila
+    if (fila->tamanho == fila->capacidade) {
+        fila->capacidade *= 2;
+        fila->elementos = (No**)realloc(fila->elementos, fila->capacidade * sizeof(No*));
+    }
+    fila->elementos[fila->tamanho++] = no;
 }
 
-// Função para remover um nó da fila
 No* removerFila(Fila* fila) {
-    No* no = fila->elementos[fila->inicio];  // Obtém o nó no início da fila
-    fila->inicio = (fila->inicio + 1) % fila->capacidade;  // Atualiza o índice de início (com comportamento circular)
-    fila->tamanho--;  // Decrementa o tamanho da fila
-    return no;  // Retorna o nó removido
+    if (filaVazia(fila)) return NULL;
+    No* no = fila->elementos[0];
+    for (int i = 1; i < fila->tamanho; i++) {
+        fila->elementos[i-1] = fila->elementos[i];
+    }
+    fila->tamanho--;
+    return no;
 }
 
 int main() {
     int c;
-    scanf("%d", &c);  // Lê o número de casos de teste
+    scanf("%d", &c);
 
-    for (int i = 1; i <= c; i++) {  // Loop para processar cada caso de teste
+    for (int i = 1; i <= c; i++) {
         int n;
-        scanf("%d", &n);  // Lê o número de valores que serão inseridos na árvore
-        No* arvore = criarFolha();  // Inicializa a árvore como uma folha vazia
-        for (int j = 0; j < n; j++) {  // Loop para inserir cada valor na árvore
+        scanf("%d", &n);
+        No* arvore = criarFolha();
+        for (int j = 0; j < n; j++) {
             int valor;
-            scanf("%d", &valor);  // Lê o valor a ser inserido
-            arvore = inserir(arvore, valor);  // Insere o valor na árvore
+            scanf("%d", &valor);
+            arvore = inserir(arvore, valor);
         }
 
-        Fila* fila = criarFila(n);  // Cria uma fila com capacidade para n elementos
-        inserirFila(fila, arvore);  // Insere a árvore completa na fila
+        Fila* fila = criarFila(n);
+        inserirFila(fila, arvore);
+        printf("Case %d:", i);
 
-        printf("Case %d:\n", i);  // Imprime o cabeçalho para o caso de teste atual
-        bool primeiro = true;  // Variável para controlar a formatação da saída
-
-        while (!filaVazia(fila)) {  // Loop para percorrer a árvore por nível
-            No* no = removerFila(fila);  // Remove o nó da fila
-            if (primeiro) {  // Se for o primeiro valor da linha
-                printf("%d", no->valor);  // Imprime o valor sem espaço antes
-                primeiro = false;  // Marca que o primeiro valor já foi impresso
-            } else {  // Para os valores subsequentes
-                printf(" %d", no->valor);  // Imprime com espaço antes
-            }
-            if (no->esquerda != NULL) inserirFila(fila, no->esquerda);  // Insere o filho esquerdo na fila, se existir
-            if (no->direita != NULL) inserirFila(fila, no->direita);  // Insere o filho direito na fila, se existir
+        while (!filaVazia(fila)) {
+            No* no = removerFila(fila);
+            printf(" %d", no->valor);
+            if (no->esquerda != NULL) inserirFila(fila, no->esquerda);
+            if (no->direita != NULL) inserirFila(fila, no->direita);
         }
-
-        printf("\n\n");  // Imprime uma linha em branco após cada caso de teste
+        printf("\n");
     }
 
-    return 0;  // Indica que o programa terminou corretamente
+    return 0;
 }
